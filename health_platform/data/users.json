@@ -1,0 +1,22 @@
+[
+  {
+    "user_id": "U0001",
+    "username": "liqiang",
+    "password": "021ad905d505b4711817009bd88ee330",
+    "phone": "15304463139",
+    "email": "2889663102@qq.com",
+    "role": "patient",
+    "created_at": "2026-03-03T13:52:48.370648",
+    "last_login": "2026-03-03T13:52:48.370757"
+  },
+  {
+    "user_id": "U0002",
+    "username": "1234",
+    "password": "ef73781effc5774100f87fe2f437a435",
+    "phone": "",
+    "email": "",
+    "role": "patient",
+    "created_at": "2026-03-03T13:51:56.858197",
+    "last_login": "2026-03-03T13:51:56.858253"
+  }
+]

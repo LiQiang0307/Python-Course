@@ -1,0 +1,18 @@
+[
+  {
+    "record_id": "R0001",
+    "user_id": "U0002",
+    "record_type": "体检",
+    "record_date": "23445",
+    "value": "BP:111, BS:111.0",
+    "unit": "",
+    "notes": "",
+    "created_at": "2026-03-03T13:48:28.711946",
+    "height": 12.0,
+    "weight": 11.0,
+    "blood_pressure": "111",
+    "blood_sugar": 111.0,
+    "heart_rate": 11,
+    "bmi": 763.8888888888889
+  }
+]
