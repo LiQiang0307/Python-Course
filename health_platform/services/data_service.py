@@ -22,6 +22,12 @@ class DataService:
     
     def add_record(self, user_id, record_type, record_date, value, **kwargs):
         """添加健康记录"""
+        # 验证日期格式
+        from utils.validator import Validator
+        is_valid, msg = Validator.validate_date(record_date)
+        if not is_valid:
+            return False, msg
+        
         records_data = self.file_handler.read_json(self.records_file)
         
         # 生成记录ID

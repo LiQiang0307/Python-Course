@@ -57,6 +57,12 @@ class HealthPlatform:
         phone = input("请输入手机号（可选）: ").strip()
         email = input("请输入邮箱（可选）: ").strip()
         
+        # 数据清洗
+        from utils.validator import Validator
+        username = Validator.clean_input(username)
+        phone = Validator.clean_phone_input(phone)
+        email = Validator.clean_email_input(email)
+        
         success, message = self.auth_service.register(
             username=username,
             password=password,
@@ -93,13 +99,24 @@ class HealthPlatform:
         user = self.auth_service.get_current_user()
         record_date = input("请输入日期（YYYY-MM-DD）: ").strip()
         
+        # 数据清洗
+        from utils.validator import Validator
+        record_date = Validator.clean_input(record_date)
+        
         if choice == '1':
             # 体检记录
-            height = float(input("身高（cm）: ") or 0)
-            weight = float(input("体重（kg）: ") or 0)
+            height_input = input("身高（cm）: ").strip()
+            weight_input = input("体重（kg）: ").strip()
             blood_pressure = input("血压（如：120/80）: ").strip()
-            blood_sugar = float(input("血糖（mmol/L）: ") or 0)
-            heart_rate = int(input("心率（次/分）: ") or 0)
+            blood_sugar_input = input("血糖（mmol/L）: ").strip()
+            heart_rate_input = input("心率（次/分）: ").strip()
+            
+            # 数据清洗
+            height = float(Validator.clean_numeric_input(height_input) or 0)
+            weight = float(Validator.clean_numeric_input(weight_input) or 0)
+            blood_pressure = Validator.clean_input(blood_pressure)
+            blood_sugar = float(Validator.clean_numeric_input(blood_sugar_input) or 0)
+            heart_rate = int(Validator.clean_numeric_input(heart_rate_input) or 0)
             
             success, message = self.data_service.add_record(
                 user_id=user.user_id,
@@ -118,7 +135,13 @@ class HealthPlatform:
             medicine_name = input("药品名称: ").strip()
             dosage = input("剂量: ").strip()
             frequency = input("频次（如：每日3次）: ").strip()
-            duration_days = int(input("用药天数: ") or 0)
+            duration_days_input = input("用药天数: ").strip()
+            
+            # 数据清洗
+            medicine_name = Validator.clean_input(medicine_name)
+            dosage = Validator.clean_input(dosage)
+            frequency = Validator.clean_input(frequency)
+            duration_days = int(Validator.clean_numeric_input(duration_days_input) or 0)
             
             success, message = self.data_service.add_record(
                 user_id=user.user_id,
@@ -136,6 +159,11 @@ class HealthPlatform:
             record_type = input("记录类型: ").strip()
             value = input("数值/内容: ").strip()
             unit = input("单位（可选）: ").strip()
+            
+            # 数据清洗
+            record_type = Validator.clean_input(record_type)
+            value = Validator.clean_input(value)
+            unit = Validator.clean_input(unit)
             
             success, message = self.data_service.add_record(
                 user_id=user.user_id,
