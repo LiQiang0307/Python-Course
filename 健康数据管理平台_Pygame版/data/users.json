@@ -1,0 +1,12 @@
+[
+  {
+    "user_id": "U0001",
+    "username": "liqiang",
+    "password": "pbkdf2_sha256$260000$a36445ceddec31b4520cab9f9f1c1799$a0676e72dbe41e0458735cd2a58d1a4bf2b6eae9e49ea795eba77ceed9b87333",
+    "phone": "",
+    "email": "",
+    "role": "patient",
+    "created_at": "2026-10-01T09:20:20.170463",
+    "last_login": "2026-10-01T09:20:28.970376"
+  }
+]
