@@ -1,0 +1,22 @@
+[
+  {
+    "user_id": "U0001",
+    "username": "student1",
+    "password": "e4a6a34a2c625d52f26846f5e3d22064",
+    "phone": "",
+    "email": "",
+    "role": "patient",
+    "created_at": "2026-11-08T20:18:18.561027",
+    "last_login": null
+  },
+  {
+    "user_id": "U0002",
+    "username": "liqiang123",
+    "password": "9b1ccb6b69237a3669ef0b0eaac8a76d",
+    "phone": "",
+    "email": "",
+    "role": "patient",
+    "created_at": "2026-11-08T20:26:37.252291",
+    "last_login": "2026-11-08T20:26:37.252332"
+  }
+]

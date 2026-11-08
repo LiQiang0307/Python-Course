@@ -1,0 +1,58 @@
+[
+  {
+    "record_id": "R0001",
+    "user_id": "U0001",
+    "record_type": "体检",
+    "record_date": "2026-10-01",
+    "value": "BP:120/80, BS:5.2",
+    "unit": "",
+    "notes": "模拟体检记录",
+    "created_at": "2026-11-08T20:18:18.561308",
+    "height": 170,
+    "weight": 65,
+    "blood_pressure": "120/80",
+    "blood_sugar": 5.2,
+    "heart_rate": 72,
+    "bmi": 22.49134948096886
+  },
+  {
+    "record_id": "R0002",
+    "user_id": "U0001",
+    "record_type": "用药",
+    "record_date": "2026-10-04",
+    "value": "1片 每日2次",
+    "unit": "",
+    "notes": "虚构演示数据",
+    "created_at": "2026-11-08T20:18:18.561404",
+    "medicine_name": "示例药品",
+    "dosage": "1片",
+    "frequency": "每日2次",
+    "duration_days": 3
+  },
+  {
+    "record_id": "R0003",
+    "user_id": "U0001",
+    "record_type": "睡眠",
+    "record_date": "2026-10-05",
+    "value": "7.5",
+    "unit": "小时",
+    "notes": "模拟记录",
+    "created_at": "2026-11-08T20:18:18.561495"
+  },
+  {
+    "record_id": "R0004",
+    "user_id": "U0002",
+    "record_type": "体检",
+    "record_date": "2026-11-08",
+    "value": "BP:120/80, BS:5.2",
+    "unit": "",
+    "notes": "无",
+    "created_at": "2026-11-08T20:27:37.405935",
+    "height": 176.01,
+    "weight": 73.01,
+    "blood_pressure": "120/80",
+    "blood_sugar": 5.2,
+    "heart_rate": 72,
+    "bmi": 23.56718237220208
+  }
+]
