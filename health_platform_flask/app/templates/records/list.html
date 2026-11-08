@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}健康记录{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-title">健康记录
+        <span class="badge badge-primary">{{ records|length }} 条</span>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
+        <a href="{{ url_for('main.records') }}"
+           class="btn btn-sm {{ 'btn-primary' if not current_type else 'btn-ghost' }}">全部</a>
+        <a href="{{ url_for('main.records', type='体检') }}"
+           class="btn btn-sm {{ 'btn-primary' if current_type == '体检' else 'btn-ghost' }}">体检</a>
+        <a href="{{ url_for('main.records', type='用药') }}"
+           class="btn btn-sm {{ 'btn-primary' if current_type == '用药' else 'btn-ghost' }}">用药</a>
+        <a href="{{ url_for('main.records', type='其他') }}"
+           class="btn btn-sm {{ 'btn-primary' if current_type == '其他' else 'btn-ghost' }}">其他</a>
+        <span style="flex:1"></span>
+        <a href="{{ url_for('main.add_record') }}" class="btn btn-sm btn-outline">＋ 添加记录</a>
+    </div>
+
+    {% if records %}
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>日期</th><th>类型</th><th>数值/内容</th>
+                <th>详情</th><th>备注</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.record_date }}</td>
+                <td><span class="badge badge-primary">{{ record.record_type }}</span></td>
+                <td>{{ record.value }} {{ record.get('unit', '') }}</td>
+                <td style="font-size:.85rem; color:var(--text-muted);">
+                    {% if record.record_type == '体检' %}
+                        身高 {{ record.get('height', '—') }}cm · 体重 {{ record.get('weight', '—') }}kg
+                        · 血压 {{ record.get('blood_pressure', '—') }} · BMI {{ record.get('bmi', '—') }}
+                    {% elif record.record_type == '用药' %}
+                        {{ record.get('medicine_name', '—') }} · {{ record.get('frequency', '—') }}
+                        · 疗程 {{ record.get('duration_days', '—') }} 天
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ record.get('notes', '') or '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">📭</div>
+        <p>暂无{{ current_type or '' }}健康记录</p>
+        <a href="{{ url_for('main.add_record') }}" class="btn btn-primary">添加第一条记录</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

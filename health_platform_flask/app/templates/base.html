@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ APP_NAME }}{% endblock %} · {{ APP_NAME }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container navbar-inner">
+        <a href="{{ url_for('main.index') }}" class="brand">
+            <span class="brand-logo">❤</span>
+            <span>{{ APP_NAME }}</span>
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('main.index') }}" class="{{ 'active' if request.path == '/' }}">首页</a>
+            <a href="{{ url_for('main.records') }}" class="{{ 'active' if request.path.startswith('/records') }}">健康记录</a>
+            <a href="{{ url_for('main.assessment') }}" class="{{ 'active' if request.path.startswith('/assessment') }}">健康评测</a>
+            {% if session.get('user_id') %}
+                <span class="nav-user">{{ session.get('username') }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">登出</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-sm">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">注册</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<main class="container main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}
+                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>{{ APP_NAME }} v{{ APP_VERSION }} · Flask 版 · 仅供教学使用</p>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

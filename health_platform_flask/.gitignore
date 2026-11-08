@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.pytest_cache/
+logs/*.log
+data/backups/*
+!data/backups/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
+
+# Local user and health records must not be committed
+data/users.json
+data/records.json

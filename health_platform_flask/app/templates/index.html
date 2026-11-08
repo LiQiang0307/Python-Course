@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}首页{% endblock %}
+
+{% block content %}
+{% if not user %}
+    <section class="hero">
+        <h1>您的健康，数字管理</h1>
+        <p>记录体检与用药数据，一键生成健康评测与统计报告，让健康管理变得简单高效。</p>
+        <a href="{{ url_for('auth.register') }}" class="btn">立即开始 →</a>
+    </section>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <span class="feature-icon">📋</span>
+            <h3>健康记录</h3>
+            <p>体检、用药、日常健康数据一站式录入与查询，支持按类型筛选。</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📊</span>
+            <h3>健康评测</h3>
+            <p>BMI、血压、血糖、心率智能评测，给出分级建议与改善方案。</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🔗</span>
+            <h3>JSON API</h3>
+            <p>提供规范的 RESTful JSON 接口，方便二次开发与数据集成。</p>
+        </div>
+    </div>
+{% else %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">记录总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.exam_count }}</div>
+            <div class="stat-label">体检记录</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.medication_count }}</div>
+            <div class="stat-label">用药记录</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.by_type.keys()|length }}</div>
+            <div class="stat-label">记录类型</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">最新记录</div>
+        {% if recent %}
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                <tr><th>日期</th><th>类型</th><th>数值/内容</th><th>备注</th></tr>
+                </thead>
+                <tbody>
+                {% for record in recent %}
+                <tr>
+                    <td>{{ record.record_date }}</td>
+                    <td><span class="badge badge-primary">{{ record.record_type }}</span></td>
+                    <td>{{ record.value }} {{ record.get('unit', '') }}</td>
+                    <td>{{ record.get('notes', '') or '—' }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">🌱</div>
+            <p>暂无健康记录，去添加第一条记录吧</p>
+            <a href="{{ url_for('main.add_record') }}" class="btn btn-primary">添加记录</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card" style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="{{ url_for('main.add_record') }}" class="btn btn-primary">＋ 添加记录</a>
+        <a href="{{ url_for('main.assessment') }}" class="btn btn-outline">开始健康评测</a>
+    </div>
+{% endif %}
+{% endblock %}

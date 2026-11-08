@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}评测结果{% endblock %}
+
+{% block content %}
+<div class="overall-banner {{ result.overall_tag }}">
+    <div style="font-size:.95rem; opacity:.9;">综合健康评级</div>
+    <div class="overall-level">{{ result.overall }}</div>
+    <p>{{ result.overall_advice }}</p>
+</div>
+
+{% if saved_message %}
+<div class="alert alert-success">{{ saved_message }}</div>
+{% endif %}
+
+{% if result.bmi %}
+<div class="card" style="text-align:center;">
+    <div class="card-title" style="justify-content:center;">BMI 指数</div>
+    <div class="bmi-big">{{ result.bmi }}</div>
+    <p style="color:var(--text-muted); font-size:.9rem;">身体质量指数（kg/m²）</p>
+</div>
+{% endif %}
+
+<div class="assess-grid">
+    {% for item in result.indicators %}
+    <div class="assess-item">
+        <div class="head">
+            <span class="name">{{ item.name }}</span>
+            <span class="badge badge-{{ item.tag }}">{{ item.level }}</span>
+        </div>
+        <div class="value">{{ item.value }}</div>
+        <div class="advice">{{ item.advice }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card" style="display:flex; gap:12px; margin-top:24px; flex-wrap:wrap;">
+    <a href="{{ url_for('main.assessment') }}" class="btn btn-outline">重新评测</a>
+    <a href="{{ url_for('main.index') }}" class="btn btn-ghost">返回首页</a>
+</div>
+{% endblock %}
