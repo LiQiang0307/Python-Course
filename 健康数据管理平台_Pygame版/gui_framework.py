@@ -15,13 +15,14 @@
 
 ============================ 注意事项（务必先读）============================
 
-1.【本目录现状】本目录的 my_backend_template.py 已填好（接的是真实
-   AuthService/DataService），main() 用 App(MyBackend()).run()，可直接运行。
-   发给学生时要把这个文件换成"全 TODO 的空模板"：那样直接跑会在登录时抛
-   NotImplementedError 崩溃，因为下面的 safe() 不捕获它。三种用法任选：
-     a) 讲机制、要一个必定能跑的演示：把 main() 改成 App(DemoBackend()).run()；
-     b) 用真实业务（本目录现状）：保持 App(MyBackend()).run()；
-     c) 学生练习：先填完 my_backend_template.py 的 TODO 再跑。
+1.【最容易踩的坑】当前 main() 用的是 MyBackend()，而 my_backend_template.py
+   里每个方法都是 raise NotImplementedError。直接运行 -> 登录时抛异常、窗口崩溃，
+   因为下面的 safe() 只捕获 ValueError/OSError/KeyError/TypeError，不捕获
+   NotImplementedError。三种解决办法任选：
+     a) 只想看机制：把 main() 改成 App(DemoBackend()).run()（假数据，一定能跑）；
+     b) 用真实业务：把 import 换成 from my_backend_filled import MyBackend
+        （需先把 GitHub 项目的 config.py/models/services/utils 拷到本目录）；
+     c) 学生练习：先把 my_backend_template.py 的 TODO 逐个填完再跑。
 
 2.【中文乱码】pygame 默认字体 Font(None) 不含中文字形。find_font() 会按优先级
    找中文字体；都找不到会抛 RuntimeError，需要放 assets/font.ttf 或设 HEALTH_FONT。
@@ -262,6 +263,11 @@ class App:
             self.progress, self.assessing, self.result = 0, False, None  # 进度归零、未在评测、结果清空
             self.actor.update(805, 420)                # 角色回到初始位置
 
+    def choose_kind(self, kind):
+        """切换录入类型：改 record_kind 后重建该类型的输入框（原 gui.py 有，提取时漏掉）。"""
+        self.record_kind = kind                        # '体检' / '用药' / '其他'
+        self.change('add')                             # 重新生成对应字段（字段由 change 经 field_specs 生成）
+
     def values(self):
         """把所有输入框的值收集成 dict（键是 Field.key），供业务层使用。"""
         return {f.key: f.value.strip() for f in self.fields}  # strip 去掉首尾空白
@@ -439,8 +445,12 @@ class App:
                 self.card((x, 130, 270, 130))           # 白卡片
                 self.text(label, (x + 24, 155), 20, MUTED)  # 卡名
                 self.text(str(n), (x + 24, 190), 44, TEAL)  # 大数字
-        elif self.state == 'add':                       # ---------- 录入页：一张大卡片＋提交按钮 ----------
-            self.card((260, 130, 880, 520))             # 表单背景卡（输入框由 draw() 统一画）
+        elif self.state == 'add':                       # ---------- 录入页：类型切换＋大卡片＋提交按钮 ----------
+            self.text('记录类型：', (270, 148), 18, MUTED)  # 类型切换提示（原 gui.py 有，提取时漏掉）
+            for i, kind in enumerate(['体检', '用药', '其他']):  # 三种类型，与 backend.field_specs 的分支对应
+                self.button(kind, (380 + i * 150, 136, 130, 42),
+                            lambda k=kind: self.choose_kind(k), self.record_kind == kind)  # 当前类型高亮
+            self.card((260, 200, 880, 450))             # 表单背景卡（输入框由 draw() 统一画）
             self.button('提交记录', (270, 620, 220, 48), lambda: self.save_record(self.values()), True)
         elif self.state == 'records':                   # ---------- 记录查询页：每页 6 条 ----------
             records = self.user_records()               # 取记录
