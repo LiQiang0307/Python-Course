@@ -37,8 +37,9 @@
      - register 真实签名是拆开的参数，模板传 dict，要 ** 展开并过滤键；
      - get_statistics 无记录返回 None、generate_report 返回 (None,msg)，要兜底；
      - prepare_record 校验失败必须 raise ValueError('人话')，不能 return False；
-     - 真实 get_user_records 返回的键是 record_type，本框架"记录查询"页用
-       r.get('kind') 取值，会显示为空——这是留给学生发现的接口不一致。
+     - 真实 get_user_records 返回的键是 record_type（不是 kind）。本框架已用
+       r.get('record_type') 正确显示；若学生写成 kind，类型列会空白——这是
+       接口键名不一致的典型坑，可作为"验"环节素材。
 
 5.【健康评测的边界】评测只是"数据汇总＋交互动画"：BMI 是算术，血压血糖心率
    只是读出来显示。不做疾病诊断、不判等级、不建议用药——教学原型的安全底线。
@@ -160,6 +161,8 @@ class App:
         self.fields, self.focus, self.buttons = [], 0, []  # 输入框列表 / 焦点下标 / 上一帧按钮命中区
         self.toast, self.toast_until, self.toast_error = '', 0, False  # 提示条文字/到期时间/是否错误
         self.record_kind, self.page = '体检', 0   # 当前录入类型 / 记录查询页码
+        self.filter_kind = None                  # 查询页过滤类型：None=全部 / '体检' / '用药'（原 gui.py 有，提取时漏掉）
+        self.selected, self.detail_offset = None, 0  # 当前选中的记录 / 详情滚动偏移（原 gui.py 有，提取时漏掉）
         self.report_lines, self.report_offset = [], 0  # 报告分行内容 / 滚动偏移
         self.assessing, self.progress, self.result = False, 0.0, None  # 评测中/进度0~1/结果文字
         self.actor = pygame.Vector2(805, 420)  # 评测角色的逻辑坐标（向量便于方向计算）
@@ -247,6 +250,7 @@ class App:
         """切换页面状态：重建输入框与焦点，重置分页/滚动，必要时重置动画。"""
         self.state, self.fields, self.focus = state, [], 0  # 新状态；清空输入框；焦点归零
         self.page, self.report_offset = 0, 0             # 换页后回到第一页、报告滚到顶
+        self.selected, self.detail_offset = None, 0      # 换页时关掉详情弹窗，避免串页
         specs = self.b.field_specs(state, self.record_kind)   # 插槽⑥：向业务要该页的字段规格
         # 登录/注册：居中卡片内单列；录入页：右侧双列。按页面分别排版（历史踩过溢出的坑）。
         for i, (key, label, default, secret) in enumerate(specs):
@@ -267,6 +271,31 @@ class App:
         """切换录入类型：改 record_kind 后重建该类型的输入框（原 gui.py 有，提取时漏掉）。"""
         self.record_kind = kind                        # '体检' / '用药' / '其他'
         self.change('add')                             # 重新生成对应字段（字段由 change 经 field_specs 生成）
+
+    def filter(self, kind):
+        """切换查询过滤条件：None=全部，或某种记录类型；同时回到第一页。"""
+        self.filter_kind, self.page = kind, 0           # 换过滤条件后页码归零，避免停在不存在的页
+        self.selected = None                           # 关闭详情，避免显示的记录被过滤掉
+
+    def select_record(self, record):
+        """点某条记录的'详情'按钮：记住这条记录，弹窗显示其全部字段。"""
+        self.selected, self.detail_offset = record, 0   # 选中并让详情滚回顶部
+
+    def detail_lines(self):
+        """把选中记录的字段翻译成中文行，用 wrap 按宽度折行（原 gui.py 有，提取时漏掉）。"""
+        labels = {'record_id': '记录编号', 'record_date': '日期', 'record_type': '类型',
+                  'value': '内容', 'unit': '单位', 'height': '身高 cm', 'weight': '体重 kg',
+                  'blood_pressure': '血压 mmHg', 'blood_sugar': '血糖 mmol/L',
+                  'heart_rate': '心率 次/分', 'bmi': 'BMI', 'medicine_name': '药名',
+                  'dosage': '剂量', 'frequency': '频次', 'duration_days': '天数', 'notes': '备注'}
+        lines = []
+        for key, label in labels.items():
+            if key in self.selected:
+                val = self.selected[key]
+                if key == 'bmi' and isinstance(val, (int, float)):
+                    val = f'{val:.2f}'                   # BMI 保留两位小数
+                lines.extend(self.wrap(f'{label}：{val}', 590, 18))  # 长文本自动折行
+        return lines
 
     def values(self):
         """把所有输入框的值收集成 dict（键是 Field.key），供业务层使用。"""
@@ -289,6 +318,8 @@ class App:
         elif self.state == 'add':                       # 录入页
             self.save_record(values)                    # 交给 save_record 处理
             return                                      # save_record 自己会 notify，这里直接返回
+        else:                                           # 其他页面不该提交；兜底防 msg/ok 未定义崩溃
+            return
         self.notify(msg, not ok)                        # 用业务返回的 msg 弹提示（失败为红）
 
     def save_record(self, values):
@@ -370,7 +401,10 @@ class App:
                 if rect.collidepoint(pos):              # 命中按钮
                     action(); break                     # 调用按钮绑定的回调函数
         elif event.type == pygame.MOUSEWHEEL:           # 鼠标滚轮
-            if self.state == 'report':                  # 只在报告页滚动
+            if self.selected:                           # 详情弹窗打开时，滚详情（原 gui.py 有，提取时漏掉）
+                max_off = max(0, len(self.detail_lines()) - 15)
+                self.detail_offset = max(0, min(max_off, self.detail_offset - event.y * 3))
+            elif self.state == 'report':                # 报告页滚动
                 self.report_offset = max(0, self.report_offset - event.y * 3)  # 下限 0，防滚过头
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:  # Esc
             if self.b.is_logged_in():                   # 已登录才回总览
@@ -452,15 +486,39 @@ class App:
                             lambda k=kind: self.choose_kind(k), self.record_kind == kind)  # 当前类型高亮
             self.card((260, 200, 880, 450))             # 表单背景卡（输入框由 draw() 统一画）
             self.button('提交记录', (270, 620, 220, 48), lambda: self.save_record(self.values()), True)
-        elif self.state == 'records':                   # ---------- 记录查询页：每页 6 条 ----------
-            records = self.user_records()               # 取记录
+        elif self.state == 'records':                   # ---------- 记录查询页：过滤 + 详情 + 分页 ----------
+            for i, kind in enumerate([None, '体检', '用药']):  # 过滤按钮组（原 gui.py 有，提取时漏掉）
+                self.button(kind or '全部', (270 + i * 130, 130, 120, 40),
+                            lambda k=kind: self.filter(k), self.filter_kind == kind)  # 当前过滤条件高亮
+            records = self.user_records(self.filter_kind)  # ★ 按过滤条件取：None=全部
+            pages = max(1, (len(records) + 5) // 6)     # 总页数，至少 1 页
+            self.page = min(self.page, pages - 1)       # 防翻过头（原框架 page+1 无上界，会翻出空白）
             shown = records[self.page * 6:self.page * 6 + 6]  # 切片：当前页的 6 条
+            if not shown:                               # 该类型暂无记录，给提示而不是空白
+                self.text('该类型暂无记录，换个类型看看或先去添加', (284, 220), 20, MUTED)
             for i, r in enumerate(shown):               # 逐条画成卡片
-                self.card((260, 130 + i * 88, 880, 78)) # 卡片高度 78，间距 88
-                # 注意：真实数据的类型键是 record_type，这里用 kind 会显示为空（见注意事项4）
-                self.text(f"{r.get('record_date', '')}  {r.get('kind', '')}", (284, 145 + i * 88), 20)
-                self.text(str(r.get('value', ''))[:40], (284, 174 + i * 88), 17, MUTED)  # value 截 40 字防溢出
-            self.button('下一页', (960, 650, 160, 44), lambda: setattr(self, 'page', self.page + 1))  # 翻页
+                y = 190 + i * 72                        # 卡片高度 62，间距 72
+                self.card((260, y, 780, 62))
+                self.text(f"{r.get('record_date', '')}  {r.get('record_type', '')}", (284, y + 8), 18)
+                summary = str(r.get('value', ''))[:40]  # value 截 40 字防溢出
+                self.text(summary, (284, y + 34), 16, MUTED)
+                self.button('详情', (1058, y + 11, 100, 40),
+                            lambda row=r: self.select_record(row))  # ★ 点开详情（原 gui.py 有，提取时漏掉）
+            self.text(f'第 {self.page + 1}/{pages} 页 · 共 {len(records)} 条', (270, 640), 17, MUTED)
+            self.button('上一页', (790, 633, 120, 40), lambda: setattr(self, 'page', max(0, self.page - 1)))
+            self.button('下一页', (930, 633, 120, 40), lambda: setattr(self, 'page', min(pages - 1, self.page + 1)))
+            if self.selected:                           # ---------- 详情模态弹窗 ----------
+                overlay = pygame.Surface((W, H), pygame.SRCALPHA)  # 半透明遮罩
+                overlay.fill((20, 35, 50, 160))
+                self.canvas.blit(overlay, (0, 0))
+                self.buttons = []                       # ★ 清空按钮命中区：模态弹窗时屏蔽背后的导航点击
+                self.card((320, 120, 660, 580))
+                self.text('记录详情', (350, 142), 26)
+                lines = self.detail_lines()[self.detail_offset:self.detail_offset + 15]
+                for i, line in enumerate(lines):
+                    self.text(line, (350, 196 + i * 30), 18)
+                self.text('滚轮查看全文', (350, 652), 15, MUTED)
+                self.button('关闭', (770, 640, 170, 42), lambda: setattr(self, 'selected', None), True)
         elif self.state == 'stats':                     # ---------- 分类统计页 ----------
             stats = self.b.get_statistics(self.b.get_current_user().user_id, self.record_kind)  # 插槽③
             items = list(stats.items()) if hasattr(stats, 'items') else list(enumerate(stats))  # 兼容 dict/列表
